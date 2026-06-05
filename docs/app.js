@@ -1,6 +1,6 @@
 /* ── Town of Salem Dashboard — GitHub Pages Edition ─────────────── */
 
-const PERSONALITIES = {
+const PERSONALITY_LABELS = {
   aggressive_accuser:   'Aggressive Accuser',
   quiet_observer:       'Quiet Observer',
   overconfident_townie: 'Overconfident',
@@ -190,7 +190,7 @@ function addEventLog(type, description) {
 function renderPlayerCard(p) {
   const faction = FACTION_ROLES[p.role] ?? 'town';
   const icon = ROLE_ICONS[p.role] ?? '👤';
-  const personality = PERSONALITIES[p.personality] ?? p.personality;
+  const personality = PERSONALITY_LABELS[p.personality] ?? p.personality;
   let card = $(`player-card-${p.id}`);
   if (!card) { card = document.createElement('div'); card.id = `player-card-${p.id}`; playerCards.appendChild(card); }
   card.className = `player-card ${faction} ${p.alive ? '' : 'dead'}`;
