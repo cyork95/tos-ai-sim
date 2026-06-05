@@ -8,97 +8,164 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    /* ── API Key Settings Modal ── */
-    #settings-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.85);
+    /* ── Landing Page ─────────────────────────────────────────────── */
+    #landing {
+      position: fixed; inset: 0; z-index: 100;
+      background: var(--bg);
       display: flex; align-items: center; justify-content: center;
-      z-index: 200; backdrop-filter: blur(4px);
+      padding: 20px;
     }
-    #settings-overlay.hidden { display: none; }
-    #settings-modal {
+    #landing.hidden { display: none; }
+
+    #landing-card {
+      width: 100%; max-width: 480px;
       background: var(--bg-panel);
-      border: 1px solid var(--gold-dim);
+      border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 36px 40px;
-      max-width: 460px; width: 90%;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px var(--gold-glow);
-      animation: modalIn 0.3s ease;
+      padding: 40px 44px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.8);
     }
-    #settings-modal { max-width: 500px; }
-    #settings-modal h2 { font-family: var(--font-head); color: var(--gold); font-size: 1.2rem; margin-bottom: 14px; }
-    #settings-modal label { display: block; font-size: 0.82rem; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.06em; margin-top: 4px; }
-    #api-key-input {
-      width: 100%; padding: 10px 14px;
+
+    #landing-icon  { font-size: 3rem; text-align: center; margin-bottom: 10px; }
+    #landing-title {
+      font-family: var(--font-head); font-size: 1.6rem; font-weight: 700;
+      color: var(--gold); text-align: center; letter-spacing: 0.06em;
+      text-shadow: 0 0 24px var(--gold-dim); margin-bottom: 4px;
+    }
+    #landing-sub {
+      font-size: 0.85rem; color: var(--text-dim); text-align: center;
+      margin-bottom: 28px; font-style: italic;
+    }
+
+    .landing-desc {
+      font-size: 0.9rem; color: var(--text-dim); line-height: 1.6;
+      margin-bottom: 22px; text-align: center;
+    }
+
+    /* info pills row */
+    .info-pills { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .info-pill {
+      flex: 1; min-width: 120px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 10px 12px; font-size: 0.78rem;
+    }
+    .pill-icon  { font-size: 1.1rem; margin-bottom: 4px; }
+    .pill-label { color: var(--text-dim); line-height: 1.45; }
+    .pill-label strong { color: var(--text); display: block; margin-bottom: 1px; }
+
+    /* cost table */
+    .cost-rows { width: 100%; margin-bottom: 22px; }
+    .cost-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; border-bottom: 1px solid var(--border);
+      font-size: 0.83rem;
+    }
+    .cost-row:last-child { border-bottom: none; }
+    .cost-label { color: var(--text-dim); }
+    .cost-val   { color: var(--town); font-family: monospace; font-size: 0.8rem; }
+
+    /* key input area */
+    #landing-key-label {
+      font-size: 0.78rem; color: var(--text-dim); letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 6px; display: block;
+    }
+    #landing-key-input {
+      width: 100%; padding: 11px 14px;
       background: var(--bg-card); color: var(--text);
       border: 1px solid var(--border-light); border-radius: var(--radius);
-      font-family: monospace; font-size: 0.85rem; margin-bottom: 8px;
+      font-family: monospace; font-size: 0.85rem; margin-bottom: 6px;
+      transition: border-color 0.2s;
     }
-    #api-key-input:focus { outline: none; border-color: var(--gold-dim); }
-    .settings-note { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 18px; font-style: italic; }
-    .settings-note a { color: var(--gold-dim); }
-    #settings-actions { display: flex; gap: 10px; justify-content: flex-end; }
-    .info-block {
-      border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px;
-      font-size: 0.82rem; line-height: 1.55;
+    #landing-key-input:focus { outline: none; border-color: var(--gold-dim); }
+    #landing-key-input.error { border-color: var(--mafia); }
+
+    #landing-key-hint {
+      font-size: 0.73rem; color: var(--text-muted);
+      margin-bottom: 22px; line-height: 1.5;
     }
-    .privacy-block { background: rgba(74,111,165,0.1); border: 1px solid rgba(74,111,165,0.3); }
-    .cost-block    { background: rgba(201,168,76,0.07); border: 1px solid rgba(201,168,76,0.25); }
-    .info-block-title { font-family: var(--font-head); font-size: 0.75rem; letter-spacing: 0.08em; margin-bottom: 6px; }
-    .privacy-block .info-block-title { color: #6a9fd8; }
-    .cost-block .info-block-title    { color: var(--gold); }
-    .info-block-body { color: var(--text-dim); }
-    .info-block-body strong { color: var(--text); }
-    .info-block-body code { font-family: monospace; font-size: 0.8rem; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px; }
-    .cost-table { width: 100%; border-collapse: collapse; margin: 6px 0 8px; }
-    .cost-table td { padding: 3px 0; color: var(--text-dim); }
-    .cost-table .cost-val { text-align: right; color: var(--town); font-family: monospace; font-size: 0.82rem; }
-    .info-block-sub { font-size: 0.73rem; color: var(--text-muted); margin-top: 6px; }
-    .info-block-sub a { color: var(--gold-dim); }
-    #key-indicator {
-      font-size: 0.72rem; color: var(--text-dim);
+    #landing-key-hint a { color: var(--gold-dim); text-decoration: none; }
+    #landing-key-hint a:hover { color: var(--gold); }
+
+    #landing-error {
+      font-size: 0.78rem; color: var(--mafia); margin-bottom: 10px;
+      min-height: 18px;
+    }
+
+    #landing-actions { display: flex; gap: 10px; }
+    #landing-actions .btn-primary  { flex: 1; }
+    #landing-actions .btn-secondary { white-space: nowrap; }
+
+    /* returning user key chip in header */
+    #key-chip {
+      font-size: 0.7rem; color: var(--text-dim);
       padding: 4px 10px; border-radius: 100px;
       background: var(--bg-card); border: 1px solid var(--border);
-      cursor: pointer; transition: all 0.2s;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
-    #key-indicator:hover { border-color: var(--gold-dim); color: var(--text); }
-    #key-indicator.has-key { color: var(--town); border-color: rgba(76,175,125,0.4); }
+    #key-chip:hover { border-color: var(--gold-dim); color: var(--text); }
+    #key-chip.has-key { color: var(--town); border-color: rgba(76,175,125,0.3); }
   </style>
 </head>
 <body>
 
-<!-- ── API Key Modal (shown on first visit) ── -->
-<div id="settings-overlay">
-  <div id="settings-modal">
-    <h2>🔑 Anthropic API Key Required</h2>
+<!-- ════════════════════════════════════════════════════════════════
+     LANDING — shown when no API key is set
+     ════════════════════════════════════════════════════════════════ -->
+<div id="landing">
+  <div id="landing-card">
+    <div id="landing-icon">⚖</div>
+    <div id="landing-title">Town of Salem</div>
+    <div id="landing-sub">Fully autonomous AI simulation — Claude plays every role</div>
 
-    <div class="info-block privacy-block">
-      <div class="info-block-title">🔒 Your key stays on your device</div>
-      <div class="info-block-body">Your API key is saved <strong>only in your own browser</strong> (localStorage). It is <strong>never</strong> sent to this website's server — because there is no server. Every API call goes directly from your browser to <code>api.anthropic.com</code>. You can verify this in your browser's Network tab.</div>
+    <div class="landing-desc">
+      Watch AI bots bluff, investigate, scheme, and vote each other out in real time.
+      All roles are played simultaneously by Claude — no human input required.
     </div>
 
-    <div class="info-block cost-block">
-      <div class="info-block-title">💰 Estimated cost per simulation</div>
-      <table class="cost-table">
-        <tr><td>7 players (Classic)</td><td class="cost-val">~$0.10 – $0.15</td></tr>
-        <tr><td>9 players (Standard)</td><td class="cost-val">~$0.20 – $0.28</td></tr>
-        <tr><td>11 players (Full)</td><td class="cost-val">~$0.35 – $0.45</td></tr>
-      </table>
-      <div class="info-block-sub">Uses Claude Haiku for players and Claude Sonnet for the Game Master. Set a spending limit at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com → Billing</a> to cap your spend.</div>
+    <div class="info-pills">
+      <div class="info-pill">
+        <div class="pill-icon">🔒</div>
+        <div class="pill-label"><strong>Private by design</strong>Your key never leaves your browser. No server — API calls go directly to Anthropic.</div>
+      </div>
+      <div class="info-pill">
+        <div class="pill-icon">💰</div>
+        <div class="pill-label"><strong>Pay-per-game</strong>Billed to your own Anthropic account. ~$0.10–$0.45 per run.</div>
+      </div>
+      <div class="info-pill">
+        <div class="pill-icon">👁</div>
+        <div class="pill-label"><strong>Spectator mode</strong>See every bot's private thoughts and the Mafia's secret chat.</div>
+      </div>
     </div>
 
-    <label for="api-key-input">Anthropic API Key</label>
-    <input type="password" id="api-key-input" placeholder="sk-ant-api03-…" autocomplete="off">
-    <div class="settings-note">Don't have a key? Get one free at <a href="https://console.anthropic.com/api-keys" target="_blank" rel="noopener">console.anthropic.com/api-keys</a></div>
-    <div id="settings-actions">
-      <button id="settings-cancel" class="btn-secondary">Cancel</button>
-      <button id="settings-save" class="btn-primary">Save & Start</button>
+    <div class="cost-rows">
+      <div class="cost-row"><span class="cost-label">7 players — Classic</span><span class="cost-val">~$0.10 – $0.15</span></div>
+      <div class="cost-row"><span class="cost-label">9 players — Standard</span><span class="cost-val">~$0.20 – $0.28</span></div>
+      <div class="cost-row"><span class="cost-label">11 players — Full</span><span class="cost-val">~$0.35 – $0.45</span></div>
+    </div>
+
+    <label id="landing-key-label" for="landing-key-input">Anthropic API Key</label>
+    <input type="password" id="landing-key-input" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
+    <div id="landing-key-hint">
+      Get a free key at <a href="https://console.anthropic.com/api-keys" target="_blank" rel="noopener">console.anthropic.com/api-keys</a>.
+      Set a spending limit under Billing so you're never surprised.
+    </div>
+
+    <div id="landing-error"></div>
+
+    <div id="landing-actions">
+      <button id="landing-cancel" class="btn-secondary" onclick="window.close(); window.location.href='about:blank';">✕ Exit</button>
+      <button id="landing-continue" class="btn-primary">Enter Salem →</button>
     </div>
   </div>
 </div>
 
+
+<!-- ════════════════════════════════════════════════════════════════
+     GAME UI — hidden until key is set
+     ════════════════════════════════════════════════════════════════ -->
+
 <!-- ── Header ── -->
-<header id="header">
+<header id="header" class="game-ui hidden">
   <div id="header-left">
     <h1>⚖ Town of Salem</h1>
     <span id="subtitle">AI Simulation</span>
@@ -110,13 +177,13 @@
   </div>
   <div id="header-right">
     <div id="alive-count"></div>
-    <button id="key-indicator" title="Click to update your API key">🔑 Key set</button>
+    <button id="key-chip" title="Click to change API key">🔑 Key set</button>
     <button id="spectator-btn" class="btn-secondary active">👁 Spectator: ON</button>
   </div>
 </header>
 
 <!-- ── Main Layout ── -->
-<main id="main">
+<main id="main" class="game-ui hidden">
   <aside id="roster-panel">
     <h2>Players</h2>
     <div id="player-cards"></div>
@@ -138,7 +205,7 @@
 </main>
 
 <!-- ── Controls Bar ── -->
-<footer id="controls">
+<footer id="controls" class="game-ui hidden">
   <div id="controls-inner">
     <div id="game-config">
       <label for="player-select">Players:</label>
@@ -150,7 +217,7 @@
       <span id="cost-estimate" style="font-size:0.75rem;color:var(--text-muted);margin-left:4px;">~$0.10–0.15</span>
     </div>
     <button id="start-btn" class="btn-primary">▶ Start Simulation</button>
-    <div id="status-msg">Enter your API key and click Start.</div>
+    <div id="status-msg"></div>
   </div>
 </footer>
 

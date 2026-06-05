@@ -1,4 +1,4 @@
-/* ── Town of Salem Dashboard — GitHub Pages / Browser Edition ─────── */
+/* ── Town of Salem Dashboard — GitHub Pages Edition ─────────────── */
 
 const PERSONALITIES = {
   aggressive_accuser:   'Aggressive Accuser',
@@ -31,7 +31,93 @@ const EVENT_ICONS = {
   JESTER_WIN:'🃏', GUILT:'😰', INFO:'ℹ️',
 };
 
-// ── State ─────────────────────────────────────────────────────────────
+const COST_ESTIMATES = { '7':'~$0.10–0.15', '9':'~$0.20–0.28', '11':'~$0.35–0.45' };
+
+// ── DOM helpers ───────────────────────────────────────────────────
+
+const $ = id => document.getElementById(id);
+function sanitize(str) { const d = document.createElement('div'); d.textContent = str ?? ''; return d.innerHTML; }
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── API Key ───────────────────────────────────────────────────────
+
+function getApiKey() { return localStorage.getItem('anthropic_api_key') ?? ''; }
+function saveApiKey(k) { localStorage.setItem('anthropic_api_key', k.trim()); }
+
+// ── Landing / Game visibility ─────────────────────────────────────
+
+function showGame() {
+  $('landing').classList.add('hidden');
+  document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
+  updateKeyChip();
+}
+
+function showLanding() {
+  document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
+  $('landing').classList.remove('hidden');
+  $('landing-key-input').value = getApiKey();
+  $('landing-error').textContent = '';
+}
+
+function updateKeyChip() {
+  const key = getApiKey();
+  const chip = $('key-chip');
+  if (!chip) return;
+  if (key) {
+    chip.textContent = `🔑 …${key.slice(-6)}`;
+    chip.classList.add('has-key');
+  } else {
+    chip.textContent = '🔑 No key';
+    chip.classList.remove('has-key');
+  }
+}
+
+// ── Landing interactions ──────────────────────────────────────────
+
+$('landing-continue').addEventListener('click', () => {
+  const key = $('landing-key-input').value.trim();
+  const errEl = $('landing-error');
+  const input = $('landing-key-input');
+
+  if (!key) {
+    errEl.textContent = 'Please enter your API key.';
+    input.classList.add('error');
+    input.focus();
+    return;
+  }
+  if (!key.startsWith('sk-ant-')) {
+    errEl.textContent = 'That doesn\'t look right — Anthropic keys start with sk-ant-';
+    input.classList.add('error');
+    input.focus();
+    return;
+  }
+
+  input.classList.remove('error');
+  errEl.textContent = '';
+  saveApiKey(key);
+  showGame();
+});
+
+// Clear error styling on type
+$('landing-key-input').addEventListener('input', () => {
+  $('landing-key-input').classList.remove('error');
+  $('landing-error').textContent = '';
+});
+
+// Enter key submits
+$('landing-key-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') $('landing-continue').click();
+});
+
+// Key chip in header → back to landing (to change key)
+$('key-chip').addEventListener('click', showLanding);
+
+// ── Initial routing ───────────────────────────────────────────────
+
+if (getApiKey()) showGame();
+else showLanding();
+
+// ── Game state ────────────────────────────────────────────────────
 
 let state = {
   players: {},
@@ -41,9 +127,8 @@ let state = {
   running: false,
 };
 
-// ── DOM ───────────────────────────────────────────────────────────────
+// ── Feed rendering ────────────────────────────────────────────────
 
-const $ = id => document.getElementById(id);
 const feed        = $('chat-feed');
 const eventLog    = $('event-log');
 const playerCards = $('player-cards');
@@ -53,51 +138,8 @@ const cycleText   = $('cycle-text');
 const aliveCount  = $('alive-count');
 const startBtn    = $('start-btn');
 const statusMsg   = $('status-msg');
-const spectatorBtn = $('spectator-btn');
-const keyIndicator = $('key-indicator');
 
-// ── API Key Management ────────────────────────────────────────────────
-
-function getApiKey() { return localStorage.getItem('anthropic_api_key') ?? ''; }
-function saveApiKey(k) { localStorage.setItem('anthropic_api_key', k.trim()); updateKeyIndicator(); }
-
-function updateKeyIndicator() {
-  const key = getApiKey();
-  if (key) {
-    keyIndicator.textContent = `🔑 …${key.slice(-6)}`;
-    keyIndicator.classList.add('has-key');
-  } else {
-    keyIndicator.textContent = '🔑 No key';
-    keyIndicator.classList.remove('has-key');
-  }
-}
-
-function showSettingsModal() { $('settings-overlay').classList.remove('hidden'); $('api-key-input').value = getApiKey(); }
-function hideSettingsModal() { $('settings-overlay').classList.add('hidden'); }
-
-$('settings-save').addEventListener('click', () => {
-  const k = $('api-key-input').value.trim();
-  if (!k.startsWith('sk-ant-')) { alert('That doesn\'t look like an Anthropic key (should start with sk-ant-).'); return; }
-  saveApiKey(k);
-  hideSettingsModal();
-  setStatus('API key saved. Click Start to run a simulation.');
-});
-
-$('settings-cancel').addEventListener('click', hideSettingsModal);
-keyIndicator.addEventListener('click', showSettingsModal);
-
-// Show modal on first visit (no key stored)
-if (!getApiKey()) showSettingsModal();
-else hideSettingsModal();
-updateKeyIndicator();
-
-// ── Helpers ───────────────────────────────────────────────────────────
-
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-function sanitize(str) { const d = document.createElement('div'); d.textContent = str ?? ''; return d.innerHTML; }
 function setStatus(msg, color = '') { statusMsg.textContent = msg; statusMsg.style.color = color || ''; }
-
-// ── Feed Rendering ────────────────────────────────────────────────────
 
 function appendFeed(el) {
   feed.appendChild(el);
@@ -118,8 +160,8 @@ function makeChatBubble(playerName, message, channel) {
   const isDefense = channel === 'defense', isMafia = channel === 'mafia';
   const el = document.createElement('div');
   el.className = `feed-item feed-chat ${isMafia ? 'mafia-speaker spectator-hidden' : ''} ${isDefense ? 'defense-speaker' : ''}`;
-  const defLabel  = isDefense ? '<span class="label">🪢 On Trial</span>' : '';
-  const mafLabel  = isMafia   ? '<span class="label">🔴 MAFIA (secret)</span>' : '';
+  const defLabel = isDefense ? '<span class="label">🪢 On Trial</span>' : '';
+  const mafLabel = isMafia   ? '<span class="label">🔴 MAFIA (secret)</span>' : '';
   el.innerHTML = `<div class="speaker">${sanitize(playerName)} ${defLabel}${mafLabel}</div><div class="message-text">${sanitize(message)}</div>`;
   if (!state.spectatorMode && isMafia) el.style.display = 'none';
   return el;
@@ -147,7 +189,7 @@ function makeInfoLine(msg) {
   return el;
 }
 
-// ── Event Log ─────────────────────────────────────────────────────────
+// ── Event log ─────────────────────────────────────────────────────
 
 function addEventLog(type, description) {
   const el = document.createElement('div');
@@ -156,13 +198,13 @@ function addEventLog(type, description) {
   eventLog.prepend(el);
 }
 
-// ── Player Cards ──────────────────────────────────────────────────────
+// ── Player cards ──────────────────────────────────────────────────
 
 function renderPlayerCard(p) {
   const faction = FACTION_ROLES[p.role] ?? 'town';
   const icon = ROLE_ICONS[p.role] ?? '👤';
   const personality = PERSONALITIES[p.personality] ?? p.personality;
-  let card = document.getElementById(`player-card-${p.id}`);
+  let card = $(`player-card-${p.id}`);
   if (!card) { card = document.createElement('div'); card.id = `player-card-${p.id}`; playerCards.appendChild(card); }
   card.className = `player-card ${faction} ${p.alive ? '' : 'dead'}`;
   const roleDisplay = state.spectatorMode ? `${icon} ${p.role}` : (p.alive ? '???' : `${icon} ${p.role}`);
@@ -171,15 +213,14 @@ function renderPlayerCard(p) {
     <div class="player-name"><span>${sanitize(p.name)}</span><span class="player-status-icon">${p.alive?'🟢':'💀'}</span></div>
     <div class="player-role">${roleDisplay}</div>
     <div class="player-personality">${sanitize(personality)}</div>
-    ${deathLine}
-  `;
+    ${deathLine}`;
 }
 
 function markPlayerDead(playerId, role, cause) {
   const p = state.players[playerId];
   if (!p) return;
   p.alive = false; p.role = role ?? p.role; p.cause = cause;
-  const card = document.getElementById(`player-card-${playerId}`);
+  const card = $(`player-card-${playerId}`);
   if (card) { card.classList.add('just-died'); setTimeout(()=>card.classList.remove('just-died'), 1200); }
   renderPlayerCard(p);
   updateAliveCount();
@@ -187,18 +228,19 @@ function markPlayerDead(playerId, role, cause) {
 
 function updateAliveCount() {
   const alive = Object.values(state.players).filter(p=>p.alive).length;
-  const total = Object.values(state.players).length;
-  aliveCount.textContent = `${alive} / ${total} alive`;
+  aliveCount.textContent = `${alive} / ${Object.values(state.players).length} alive`;
 }
 
 function updatePhaseDisplay(phase, cycle) {
   const isNight = phase === 'NIGHT';
   phaseIcon.textContent = isNight ? '🌙' : (phase === 'DAY_VOTING' ? '⚖' : '☀');
-  phaseText.textContent  = isNight ? 'Night' : (phase === 'DAY_VOTING' ? 'Voting' : 'Day');
-  cycleText.textContent  = `Cycle ${cycle}`;
+  phaseText.textContent = isNight ? 'Night' : (phase === 'DAY_VOTING' ? 'Voting' : 'Day');
+  cycleText.textContent = `Cycle ${cycle}`;
 }
 
-// ── Spectator Mode ────────────────────────────────────────────────────
+// ── Spectator mode ────────────────────────────────────────────────
+
+const spectatorBtn = $('spectator-btn');
 
 function applySpectatorMode() {
   const show = state.spectatorMode;
@@ -210,23 +252,23 @@ function applySpectatorMode() {
 
 spectatorBtn.addEventListener('click', () => { state.spectatorMode = !state.spectatorMode; applySpectatorMode(); });
 
-// ── Event Queue ───────────────────────────────────────────────────────
+// ── Event queue ───────────────────────────────────────────────────
 
 function getEventDelay({ type, payload }) {
-  if (type === 'game_over')  return 2000;
-  if (type === 'phase')      return 1200;
-  if (type === 'narration')  return 1500;
-  if (type === 'chat')       return payload?.channel === 'mafia' ? 800 : 2000;
-  if (type === 'private')    return 800;
+  if (type === 'game_over')    return 2000;
+  if (type === 'phase')        return 1200;
+  if (type === 'narration')    return 1500;
+  if (type === 'chat')         return payload?.channel === 'mafia' ? 800 : 2000;
+  if (type === 'private')      return 800;
   if (type === 'night_action') return 400;
-  if (type === 'info')       return 500;
+  if (type === 'info')         return 500;
   if (type === 'event') {
-    if (payload?.eventType === 'DEATH')    return 2500;
-    if (payload?.eventType === 'LYNCH')    return 2000;
-    if (payload?.eventType === 'TRIAL')    return 1800;
-    if (payload?.eventType === 'SPARED')   return 1800;
+    if (payload?.eventType === 'DEATH')     return 2500;
+    if (payload?.eventType === 'LYNCH')     return 2000;
+    if (payload?.eventType === 'TRIAL')     return 1800;
+    if (payload?.eventType === 'SPARED')    return 1800;
     if (payload?.eventType === 'LAST_WILL') return 2000;
-    if (payload?.eventType === 'SAVE')     return 1200;
+    if (payload?.eventType === 'SAVE')      return 1200;
     if (['VERDICT','TALLY'].includes(payload?.eventType)) return 1000;
     return 700;
   }
@@ -271,9 +313,8 @@ function processEvent({ type, payload }) {
       break;
 
     case 'night_action':
-      if (state.spectatorMode && payload.targetName) {
+      if (state.spectatorMode && payload.targetName)
         appendFeed(makeInfoLine(`🌙 ${payload.playerName} (${payload.role}) → ${payload.targetName}`));
-      }
       break;
 
     case 'event': {
@@ -290,14 +331,14 @@ function processEvent({ type, payload }) {
         el.className = 'feed-item feed-narration';
         el.innerHTML = `<div class="narration-text" style="color:var(--gold)">⚖ ${sanitize(description)}</div>`;
         appendFeed(el);
-      } else if (eventType === 'SAVE')       appendFeed(makeInfoLine(`🛡️ ${description}`));
-      else if (eventType === 'ROLEBLOCK')    appendFeed(makeInfoLine(`🚫 ${description}`));
+      } else if (eventType === 'SAVE')    appendFeed(makeInfoLine(`🛡️ ${description}`));
+      else if (eventType === 'ROLEBLOCK') appendFeed(makeInfoLine(`🚫 ${description}`));
       else if (eventType === 'LAST_WILL') {
         const el = document.createElement('div');
         el.className = 'feed-item feed-chat';
         el.innerHTML = `<div class="speaker" style="color:var(--text-dim)">📜 Last Will</div><div class="message-text" style="font-style:italic">${sanitize(payload.will)}</div>`;
         appendFeed(el);
-      } else if (eventType === 'TALLY')  appendFeed(makeInfoLine(`📊 ${description}`));
+      } else if (eventType === 'TALLY') appendFeed(makeInfoLine(`📊 ${description}`));
       else if (eventType === 'VERDICT') {
         const vColor = { guilty:'var(--mafia)', innocent:'var(--town)', abstain:'var(--text-dim)' }[payload.verdict] ?? '';
         const el = document.createElement('div');
@@ -314,7 +355,7 @@ function processEvent({ type, payload }) {
       startBtn.disabled = false;
       startBtn.textContent = '▶ Start New Game';
       state.running = false;
-      setStatus('Game over!', 'var(--gold)');
+      setStatus('Game complete!', 'var(--gold)');
       break;
 
     case 'error':
@@ -325,7 +366,7 @@ function processEvent({ type, payload }) {
   }
 }
 
-// ── Game Over Modal ───────────────────────────────────────────────────
+// ── Game over modal ───────────────────────────────────────────────
 
 function showGameOverModal({ winner, reason, players }) {
   const icons = { Town:'🏛️', Mafia:'🔪', 'Serial Killer':'🪓', Jester:'🃏', Draw:'⚖️' };
@@ -345,15 +386,13 @@ function showGameOverModal({ winner, reason, players }) {
 
 $('modal-close').addEventListener('click', () => $('modal-overlay').classList.add('hidden'));
 
-// ── Start Game ────────────────────────────────────────────────────────
+// ── Start game ────────────────────────────────────────────────────
 
 async function startGame() {
   const apiKey = getApiKey();
-  if (!apiKey) { showSettingsModal(); return; }
+  if (!apiKey) { showLanding(); return; }
 
   const playerCount = parseInt($('player-select').value);
-
-  // Reset UI
   feed.innerHTML = '';
   eventLog.innerHTML = '';
   playerCards.innerHTML = '';
@@ -371,13 +410,8 @@ async function startGame() {
   startBtn.textContent = '⏳ Running…';
   setStatus(`Running ${playerCount}-player simulation…`);
 
-  // Run entirely in browser
   try {
-    await window.GameEngine.run(
-      apiKey,
-      playerCount,
-      (type, payload) => enqueue({ type, payload, ts: Date.now() })
-    );
+    await window.GameEngine.run(apiKey, playerCount, (type, payload) => enqueue({ type, payload }));
   } catch (err) {
     enqueue({ type:'error', payload:{ message: err.message } });
   }
@@ -385,16 +419,15 @@ async function startGame() {
 
 startBtn.addEventListener('click', startGame);
 
-// ── Init ──────────────────────────────────────────────────────────────
-
-const COST_ESTIMATES = { 7:'~$0.10–0.15', 9:'~$0.20–0.28', 11:'~$0.35–0.45' };
+// ── Cost estimate dropdown ────────────────────────────────────────
 
 function updateCostEstimate() {
   const el = $('cost-estimate');
   if (el) el.textContent = COST_ESTIMATES[$('player-select').value] ?? '';
 }
-
 $('player-select').addEventListener('change', updateCostEstimate);
 updateCostEstimate();
+
+// ── Init ──────────────────────────────────────────────────────────
 
 applySpectatorMode();
