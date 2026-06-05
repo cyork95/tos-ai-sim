@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Town of Salem — AI Simulation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── API Key Settings Modal ── */
+    #settings-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; backdrop-filter: blur(4px);
+    }
+    #settings-overlay.hidden { display: none; }
+    #settings-modal {
+      background: var(--bg-panel);
+      border: 1px solid var(--gold-dim);
+      border-radius: var(--radius-lg);
+      padding: 36px 40px;
+      max-width: 460px; width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px var(--gold-glow);
+      animation: modalIn 0.3s ease;
+    }
+    #settings-modal h2 { font-family: var(--font-head); color: var(--gold); font-size: 1.2rem; margin-bottom: 8px; }
+    #settings-modal p  { color: var(--text-dim); font-size: 0.88rem; line-height: 1.6; margin-bottom: 20px; }
+    #settings-modal label { display: block; font-size: 0.82rem; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.06em; }
+    #api-key-input {
+      width: 100%; padding: 10px 14px;
+      background: var(--bg-card); color: var(--text);
+      border: 1px solid var(--border-light); border-radius: var(--radius);
+      font-family: monospace; font-size: 0.85rem; margin-bottom: 8px;
+    }
+    #api-key-input:focus { outline: none; border-color: var(--gold-dim); }
+    .settings-note { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 20px; font-style: italic; }
+    #settings-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    #key-indicator {
+      font-size: 0.72rem; color: var(--text-dim);
+      padding: 4px 10px; border-radius: 100px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      cursor: pointer; transition: all 0.2s;
+    }
+    #key-indicator:hover { border-color: var(--gold-dim); color: var(--text); }
+    #key-indicator.has-key { color: var(--town); border-color: rgba(76,175,125,0.4); }
+  </style>
+</head>
+<body>
+
+<!-- ── API Key Modal (shown on first visit) ── -->
+<div id="settings-overlay">
+  <div id="settings-modal">
+    <h2>🔑 Anthropic API Key</h2>
+    <p>This simulation calls Claude AI directly from your browser. Your key is stored only in your browser's localStorage and is never sent anywhere except to api.anthropic.com.</p>
+    <label for="api-key-input">API Key</label>
+    <input type="password" id="api-key-input" placeholder="sk-ant-api03-…" autocomplete="off">
+    <div class="settings-note">Get a key at console.anthropic.com — a 7-player game costs ~$0.15.</div>
+    <div id="settings-actions">
+      <button id="settings-cancel" class="btn-secondary">Cancel</button>
+      <button id="settings-save" class="btn-primary">Save & Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Header ── -->
+<header id="header">
+  <div id="header-left">
+    <h1>⚖ Town of Salem</h1>
+    <span id="subtitle">AI Simulation</span>
+  </div>
+  <div id="phase-display">
+    <div id="phase-icon">🏛</div>
+    <div id="phase-text">Salem</div>
+    <div id="cycle-text"></div>
+  </div>
+  <div id="header-right">
+    <div id="alive-count"></div>
+    <button id="key-indicator" title="Click to update your API key">🔑 Key set</button>
+    <button id="spectator-btn" class="btn-secondary active">👁 Spectator: ON</button>
+  </div>
+</header>
+
+<!-- ── Main Layout ── -->
+<main id="main">
+  <aside id="roster-panel">
+    <h2>Players</h2>
+    <div id="player-cards"></div>
+  </aside>
+  <section id="feed-panel">
+    <div id="feed-header">
+      <span id="feed-title">Live Feed</span>
+      <label class="toggle-label">
+        <input type="checkbox" id="autoscroll-check" checked>
+        Auto-scroll
+      </label>
+    </div>
+    <div id="chat-feed"></div>
+  </section>
+  <aside id="event-panel">
+    <h2>Event Log</h2>
+    <div id="event-log"></div>
+  </aside>
+</main>
+
+<!-- ── Controls Bar ── -->
+<footer id="controls">
+  <div id="controls-inner">
+    <div id="game-config">
+      <label for="player-select">Players:</label>
+      <select id="player-select">
+        <option value="7">7 — Classic</option>
+        <option value="9">9 — Standard</option>
+        <option value="11">11 — Full</option>
+      </select>
+    </div>
+    <button id="start-btn" class="btn-primary">▶ Start Simulation</button>
+    <div id="status-msg">Enter your API key and click Start.</div>
+  </div>
+</footer>
+
+<!-- ── Game Over Modal ── -->
+<div id="modal-overlay" class="hidden">
+  <div id="modal">
+    <div id="modal-icon"></div>
+    <h2 id="modal-winner"></h2>
+    <p id="modal-reason"></p>
+    <div id="modal-roster"></div>
+    <button id="modal-close" class="btn-primary">Close</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "playerCount": 7,
+  "roleSets": {
+    "7": ["Sheriff", "Doctor", "Investigator", "Escort", "Godfather", "Mafioso", "Jester"],
+    "9": ["Sheriff", "Doctor", "Investigator", "Escort", "Vigilante", "Godfather", "Mafioso", "Consigliere", "Jester"],
+    "11": ["Sheriff", "Doctor", "Investigator", "Escort", "Vigilante", "Mayor", "Godfather", "Mafioso", "Consigliere", "Jester", "Serial Killer"]
+  },
+  "llm": {
+    "provider": "anthropic",
+    "playerModel": "claude-haiku-4-5-20251001",
+    "gameMasterModel": "claude-sonnet-4-6",
+    "playerTemperature": 0.9,
+    "gameMasterTemperature": 0.0,
+    "playerMaxTokens": 400,
+    "gameMasterMaxTokens": 600,
+    "maxRetries": 3
+  },
+  "output": {
+    "directory": "./output",
+    "logAllCalls": true
+  }
+}

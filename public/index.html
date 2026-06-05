@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Town of Salem — AI Simulation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header id="header">
+  <div id="header-left">
+    <h1>⚖ Town of Salem</h1>
+    <span id="subtitle">AI Simulation</span>
+  </div>
+  <div id="phase-display">
+    <div id="phase-icon">☀</div>
+    <div id="phase-text">Waiting…</div>
+    <div id="cycle-text"></div>
+  </div>
+  <div id="header-right">
+    <div id="alive-count"></div>
+    <button id="spectator-btn" class="btn-secondary" title="Toggle spectator mode (shows private reasoning and Mafia chat)">
+      👁 Spectator: ON
+    </button>
+  </div>
+</header>
+
+<!-- ── Main Layout ── -->
+<main id="main">
+
+  <!-- Left: Player Roster -->
+  <aside id="roster-panel">
+    <h2>Players</h2>
+    <div id="player-cards"></div>
+  </aside>
+
+  <!-- Center: Live Feed -->
+  <section id="feed-panel">
+    <div id="feed-header">
+      <span id="feed-title">Live Feed</span>
+      <label class="toggle-label">
+        <input type="checkbox" id="autoscroll-check" checked>
+        Auto-scroll
+      </label>
+    </div>
+    <div id="chat-feed"></div>
+  </section>
+
+  <!-- Right: Event Log -->
+  <aside id="event-panel">
+    <h2>Event Log</h2>
+    <div id="event-log"></div>
+  </aside>
+
+</main>
+
+<!-- ── Controls Bar ── -->
+<footer id="controls">
+  <div id="controls-inner">
+    <div id="game-config">
+      <label for="player-select">Players:</label>
+      <select id="player-select">
+        <option value="7">7 — Classic</option>
+        <option value="9">9 — Standard</option>
+        <option value="11">11 — Full</option>
+      </select>
+    </div>
+    <button id="start-btn" class="btn-primary">▶ Start Simulation</button>
+    <div id="status-msg"></div>
+  </div>
+</footer>
+
+<!-- ── Game Over Modal ── -->
+<div id="modal-overlay" class="hidden">
+  <div id="modal">
+    <div id="modal-icon"></div>
+    <h2 id="modal-winner"></h2>
+    <p id="modal-reason"></p>
+    <div id="modal-roster"></div>
+    <button id="modal-close" class="btn-primary">View Replay</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
