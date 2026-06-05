@@ -387,4 +387,14 @@ startBtn.addEventListener('click', startGame);
 
 // ── Init ──────────────────────────────────────────────────────────────
 
+const COST_ESTIMATES = { 7:'~$0.10–0.15', 9:'~$0.20–0.28', 11:'~$0.35–0.45' };
+
+function updateCostEstimate() {
+  const el = $('cost-estimate');
+  if (el) el.textContent = COST_ESTIMATES[$('player-select').value] ?? '';
+}
+
+$('player-select').addEventListener('change', updateCostEstimate);
+updateCostEstimate();
+
 applySpectatorMode();

@@ -25,9 +25,9 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px var(--gold-glow);
       animation: modalIn 0.3s ease;
     }
-    #settings-modal h2 { font-family: var(--font-head); color: var(--gold); font-size: 1.2rem; margin-bottom: 8px; }
-    #settings-modal p  { color: var(--text-dim); font-size: 0.88rem; line-height: 1.6; margin-bottom: 20px; }
-    #settings-modal label { display: block; font-size: 0.82rem; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.06em; }
+    #settings-modal { max-width: 500px; }
+    #settings-modal h2 { font-family: var(--font-head); color: var(--gold); font-size: 1.2rem; margin-bottom: 14px; }
+    #settings-modal label { display: block; font-size: 0.82rem; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.06em; margin-top: 4px; }
     #api-key-input {
       width: 100%; padding: 10px 14px;
       background: var(--bg-card); color: var(--text);
@@ -35,8 +35,26 @@
       font-family: monospace; font-size: 0.85rem; margin-bottom: 8px;
     }
     #api-key-input:focus { outline: none; border-color: var(--gold-dim); }
-    .settings-note { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 20px; font-style: italic; }
+    .settings-note { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 18px; font-style: italic; }
+    .settings-note a { color: var(--gold-dim); }
     #settings-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .info-block {
+      border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px;
+      font-size: 0.82rem; line-height: 1.55;
+    }
+    .privacy-block { background: rgba(74,111,165,0.1); border: 1px solid rgba(74,111,165,0.3); }
+    .cost-block    { background: rgba(201,168,76,0.07); border: 1px solid rgba(201,168,76,0.25); }
+    .info-block-title { font-family: var(--font-head); font-size: 0.75rem; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .privacy-block .info-block-title { color: #6a9fd8; }
+    .cost-block .info-block-title    { color: var(--gold); }
+    .info-block-body { color: var(--text-dim); }
+    .info-block-body strong { color: var(--text); }
+    .info-block-body code { font-family: monospace; font-size: 0.8rem; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px; }
+    .cost-table { width: 100%; border-collapse: collapse; margin: 6px 0 8px; }
+    .cost-table td { padding: 3px 0; color: var(--text-dim); }
+    .cost-table .cost-val { text-align: right; color: var(--town); font-family: monospace; font-size: 0.82rem; }
+    .info-block-sub { font-size: 0.73rem; color: var(--text-muted); margin-top: 6px; }
+    .info-block-sub a { color: var(--gold-dim); }
     #key-indicator {
       font-size: 0.72rem; color: var(--text-dim);
       padding: 4px 10px; border-radius: 100px;
@@ -52,14 +70,29 @@
 <!-- ── API Key Modal (shown on first visit) ── -->
 <div id="settings-overlay">
   <div id="settings-modal">
-    <h2>🔑 Anthropic API Key</h2>
-    <p>This simulation calls Claude AI directly from your browser. Your key is stored only in your browser's localStorage and is never sent anywhere except to api.anthropic.com.</p>
-    <label for="api-key-input">API Key</label>
+    <h2>🔑 Anthropic API Key Required</h2>
+
+    <div class="info-block privacy-block">
+      <div class="info-block-title">🔒 Your key stays on your device</div>
+      <div class="info-block-body">Your API key is saved <strong>only in your own browser</strong> (localStorage). It is <strong>never</strong> sent to this website's server — because there is no server. Every API call goes directly from your browser to <code>api.anthropic.com</code>. You can verify this in your browser's Network tab.</div>
+    </div>
+
+    <div class="info-block cost-block">
+      <div class="info-block-title">💰 Estimated cost per simulation</div>
+      <table class="cost-table">
+        <tr><td>7 players (Classic)</td><td class="cost-val">~$0.10 – $0.15</td></tr>
+        <tr><td>9 players (Standard)</td><td class="cost-val">~$0.20 – $0.28</td></tr>
+        <tr><td>11 players (Full)</td><td class="cost-val">~$0.35 – $0.45</td></tr>
+      </table>
+      <div class="info-block-sub">Uses Claude Haiku for players and Claude Sonnet for the Game Master. Set a spending limit at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com → Billing</a> to cap your spend.</div>
+    </div>
+
+    <label for="api-key-input">Anthropic API Key</label>
     <input type="password" id="api-key-input" placeholder="sk-ant-api03-…" autocomplete="off">
-    <div class="settings-note">Get a key at console.anthropic.com — a 7-player game costs ~$0.15.</div>
+    <div class="settings-note">Don't have a key? Get one free at <a href="https://console.anthropic.com/api-keys" target="_blank" rel="noopener">console.anthropic.com/api-keys</a></div>
     <div id="settings-actions">
       <button id="settings-cancel" class="btn-secondary">Cancel</button>
-      <button id="settings-save" class="btn-primary">Save & Continue</button>
+      <button id="settings-save" class="btn-primary">Save & Start</button>
     </div>
   </div>
 </div>
@@ -114,6 +147,7 @@
         <option value="9">9 — Standard</option>
         <option value="11">11 — Full</option>
       </select>
+      <span id="cost-estimate" style="font-size:0.75rem;color:var(--text-muted);margin-left:4px;">~$0.10–0.15</span>
     </div>
     <button id="start-btn" class="btn-primary">▶ Start Simulation</button>
     <div id="status-msg">Enter your API key and click Start.</div>
