@@ -74,39 +74,26 @@ function updateKeyChip() {
 
 // ── Landing interactions ──────────────────────────────────────────
 
-$('landing-continue').addEventListener('click', () => {
-  const key = $('landing-key-input').value.trim();
+// Exposed as a global so the inline onclick on the button always fires,
+// even if an earlier JS error prevented addEventListener from running.
+window.handleContinue = function () {
+  const key = ($('landing-key-input').value || '').trim();
   const errEl = $('landing-error');
-  const input = $('landing-key-input');
 
   if (!key) {
-    errEl.textContent = 'Please enter your API key.';
-    input.classList.add('error');
-    input.focus();
-    return;
-  }
-  if (!key.startsWith('sk-ant-')) {
-    errEl.textContent = 'That doesn\'t look right — Anthropic keys start with sk-ant-';
-    input.classList.add('error');
-    input.focus();
+    errEl.textContent = 'Please paste your Anthropic API key above.';
+    $('landing-key-input').focus();
     return;
   }
 
-  input.classList.remove('error');
   errEl.textContent = '';
   saveApiKey(key);
   showGame();
-});
-
-// Clear error styling on type
-$('landing-key-input').addEventListener('input', () => {
-  $('landing-key-input').classList.remove('error');
-  $('landing-error').textContent = '';
-});
+};
 
 // Enter key submits
-$('landing-key-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') $('landing-continue').click();
+$('landing-key-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') window.handleContinue();
 });
 
 // Key chip in header → back to landing (to change key)
