@@ -213,17 +213,24 @@ spectatorBtn.addEventListener('click', () => { state.spectatorMode = !state.spec
 // ── Event Queue ───────────────────────────────────────────────────────
 
 function getEventDelay({ type, payload }) {
-  if (type === 'game_over') return 1500;
-  if (type === 'phase')     return 700;
-  if (type === 'narration') return 600;
-  if (type === 'chat')      return payload?.channel === 'mafia' ? 200 : 600;
-  if (type === 'private')   return 100;
+  if (type === 'game_over')  return 2000;
+  if (type === 'phase')      return 1200;
+  if (type === 'narration')  return 1500;
+  if (type === 'chat')       return payload?.channel === 'mafia' ? 800 : 2000;
+  if (type === 'private')    return 800;
+  if (type === 'night_action') return 400;
+  if (type === 'info')       return 500;
   if (type === 'event') {
-    if (payload?.eventType === 'DEATH') return 1200;
-    if (['VERDICT','TALLY'].includes(payload?.eventType)) return 400;
-    return 300;
+    if (payload?.eventType === 'DEATH')    return 2500;
+    if (payload?.eventType === 'LYNCH')    return 2000;
+    if (payload?.eventType === 'TRIAL')    return 1800;
+    if (payload?.eventType === 'SPARED')   return 1800;
+    if (payload?.eventType === 'LAST_WILL') return 2000;
+    if (payload?.eventType === 'SAVE')     return 1200;
+    if (['VERDICT','TALLY'].includes(payload?.eventType)) return 1000;
+    return 700;
   }
-  return 150;
+  return 400;
 }
 
 async function processQueue() {

@@ -233,20 +233,24 @@ function applySpectatorMode() {
 
 function getEventDelay(ev) {
   switch (ev.type) {
-    case 'setup':       return 400;
-    case 'phase':       return 600;
-    case 'chat':        return ev.payload.channel === 'mafia' ? 200 : 700;
-    case 'private':     return 100;
-    case 'narration':   return 800;
+    case 'setup':        return 600;
+    case 'phase':        return 1200;
+    case 'chat':         return ev.payload?.channel === 'mafia' ? 800 : 2000;
+    case 'private':      return 800;
+    case 'narration':    return 1500;
     case 'event':
-      if (ev.payload.eventType === 'DEATH') return 1200;
-      if (ev.payload.eventType === 'LYNCH') return 1000;
-      if (['VERDICT','TALLY'].includes(ev.payload.eventType)) return 500;
-      return 350;
-    case 'night_action': return 150;
-    case 'info':        return 200;
-    case 'game_over':   return 1500;
-    default:            return 200;
+      if (ev.payload?.eventType === 'DEATH')  return 2500;
+      if (ev.payload?.eventType === 'LYNCH')  return 2000;
+      if (ev.payload?.eventType === 'TRIAL')  return 1800;
+      if (ev.payload?.eventType === 'SPARED') return 1800;
+      if (ev.payload?.eventType === 'LAST_WILL') return 2000;
+      if (['VERDICT','TALLY'].includes(ev.payload?.eventType)) return 1000;
+      if (ev.payload?.eventType === 'SAVE')   return 1200;
+      return 700;
+    case 'night_action': return 400;
+    case 'info':         return 500;
+    case 'game_over':    return 2000;
+    default:             return 400;
   }
 }
 
